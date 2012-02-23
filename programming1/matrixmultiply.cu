@@ -5,7 +5,7 @@
 
 /*
 * hostmultiply.cu
-* (c) 2012 Guy Dickinson <guy.dickinson@nyu.edu>
+* Copyright 2012 Guy Dickinson <guy.dickinson@nyu.edu>
 *
 * Written for "GPUs: Architecture and Programming"
 * Prof. M. Zahran, New York University
@@ -54,7 +54,7 @@ void cudaMatrixMul(float* M, float* N, float* P, int width) {
     float* Nd;
     float* Pd;
     
-    // Xfer M and N to device memory
+    // Transfer M and N to device memory
     cudaMalloc(&Md, size);
     cudaMemcpy(Md, M, size, cudaMemcpyHostToDevice);
     
@@ -73,7 +73,7 @@ void cudaMatrixMul(float* M, float* N, float* P, int width) {
     // Transfer P from device to host
     cudaMemcpy(P, Pd, size, cudaMemcpyDeviceToHost);
     
-    // Free device matrics
+    // Free device matrices
     cudaFree(Md);
     cudaFree(Pd);
     cudaFree(Nd);
@@ -139,5 +139,4 @@ void runTest(void) {
 
 int main(void) {
     runTest();
-        
     }
