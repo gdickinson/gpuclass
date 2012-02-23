@@ -1,0 +1,117 @@
+\documentclass{article} 
+\usepackage{fullpage} 
+\usepackage{mathpazo} 
+\usepackage{graphicx} 
+\usepackage{hyperref} 
+\usepackage{listings}
+\usepackage{Sweave}
+\usepackage{float}
+
+% Source Code Listing Control
+\lstset{
+  numbers = left,
+  basicstyle=\ttfamily,
+  columns = fixed
+}
+
+\begin{document}
+
+\title{GPU Programming, Programming Assignment 1} 
+\author{Guy Dickinson, guy.dickinson@nyu.edu} 
+\maketitle
+
+\section{About the Hardware}
+
+The hardware available in each node of cuda*.cims.nyu.edu is as follows: 
+\begin{figure}[h!] 
+	\begin{tabular}
+		{ r l } Model & Tesla T10\\
+		SMs per Device & 30 \\
+		Cores per SM & 8 (for a total of 240 cores)\\
+		Clock Speed/Frequency & 1.30 GHz\\
+		Memory & 4GB \\
+		Transistor Count & 1.4 billion\\
+		Release Year & 2008 \\
+	\end{tabular}
+\end{figure}
+
+\section{Experiment} Following the instructions given, as well as the source code in the book, I performed both serial and parallel matrix multiplication operations on matrices of size $w \times w$ where $w=8, 16, 32, 64, 128, 256, 1024$ using $w \times w$ threads per block (with a single block) in the case of the parallel operation. Intuitively, I expected that the parallel version of this operation would be substantially faster than the serial for all of the above.
+
+\subsection{Results}
+
+<<echo=FALSE>>=
+data <- read.csv("data.csv")
+@
+
+In general, parallel execution is, as expected, substantially faster than serial execution, especially for larger datasets. This is intuitively pleasing; atomic operations which can be truly parallelized will always run faster than when run serially. Matrix multiplication is an embarassingly parallel problem.
+
+There is an interesting outlier in the dataset; parallel execution when $w = 8$ was much slower than its serial counterpart for me, which we see clearly in figure 1, taking nearly two full seconds, versus the serial 0.08ms. I speculate that the difference in time may be accounted for by some run-once initialization code which sets the GPU up for the first operation.
+
+Figure 3 excludes the outlier, and for $w \ge 16$, we see that the time taken to run the multiplication operation is: a) very very minimal in a real sense, taking no longer than 5.5ms at its longest, and b) growing minimally (or in some cases negatively) until $w=256$ and then non-linearly from $w \ge 256$. This is also intuitively pleasing; we expect that operations that can be completely parallelized such that all operations can run at the same time will take the same amount of time regardless. We further expect that vectors of increasing size that require multiplication and summation will require more time to calculate once the data structure must be looped instead of computed simultaneously.
+
+\begin{figure}[H]
+  \centering
+<<fig=TRUE, echo=FALSE>>=
+barplot(data$Parallel,
+  main="Parallel Execution Time",
+  names.arg=data$Width,
+  ylab="Time (ms)")
+@
+\caption{Parallel Execution Time, $w \times w$ CUDA threads}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+<<fig=TRUE, echo=FALSE>>=
+barplot((data$Parallel.Time[2:length(data$Parallel.Time - 1)]),
+  main="Parallel Execution Time, w > 8",
+  names.arg=data$Width[2:length(data$Parallel.Time - 1)],
+  ylim=c(0,6),
+  ylab="Time (ms)")
+@
+\caption{Parallel Execution Time, excluding the first run, $w=8$}
+\end{figure}
+
+
+\begin{figure}[H]
+  \centering
+<<fig=TRUE, echo=FALSE>>=
+barplot(data$Parallel,
+  main="Parallel Execution Time",
+  names.arg=data$Width,
+  ylab="Time (ms)")
+@
+\caption{Parallel Execution Time, $w \times w$ CUDA threads}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+<<fig=TRUE, echo=FALSE>>=
+barplot((data$Parallel.Time[2:length(data$Parallel.Time - 1)]),
+  main="Parallel Execution Time, w > 8",
+  names.arg=data$Width[2:length(data$Parallel.Time - 1)],
+  ylim=c(0,6),
+  ylab="Time (ms)")
+@
+\caption{Parallel Execution Time, excluding the first run, $w=8$}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+<<fig=TRUE, echo=FALSE>>=
+barplot((data$Serial.Time / data$Parallel.Time),
+  main="Speedup",
+  names.arg=data$Width,
+  ylim=c(0,2000),
+  ylab="Factor")
+@
+  \caption{Speedup Factor}
+\end{figure}
+
+
+
+
+\section{Source Code}
+\lstinputlisting[language=c]{matrixmultiply.cu}
+
+\end{document} 
