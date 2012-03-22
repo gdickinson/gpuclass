@@ -49,7 +49,7 @@ int cudaFindMaxOnDeviceNaively(int* A, int length) {
     dim3 dimGrid(length/512, 1);
     
     findMaxNaivelyKernel<<<dimGrid, dimBlock>>>(cudaArray);
-        
+    
     
     // Recover just the first element from the device to save time.
     cudaMemcpy(&ret, cudaArray, sizeof(int), cudaMemcpyDeviceToHost);
@@ -68,7 +68,6 @@ __global__ void findMaxWithoutDivergenceKernel(int* A) {
             }
         }
     }
-    
 }
 
 int cudaFindMaxWithoutDivergence(int* A, int length) {
@@ -82,6 +81,67 @@ int cudaFindMaxWithoutDivergence(int* A, int length) {
     dim3 dimGrid(length / 512, 1);
     
     findMaxWithoutDivergenceKernel<<<dimGrid, dimBlock>>>(cudaArray);
+    
+    // Recover just the first element from the device to save time.
+    cudaMemcpy(&ret, cudaArray, sizeof(int), cudaMemcpyDeviceToHost);
+    cudaFree(cudaArray);
+    return ret;
+}
+
+__global__ void findMaxWithSharedMemoryKernel(int* A) {
+    //Static allocation like this is pretty lame but good enough for testing.
+    __shared__ int sharedmem[512];
+    
+    // copy this chunk into shared memory from global
+    unsigned int threadIndex = threadIdx.x;
+    unsigned int globalThreadId = (blockIdx.x * blockDim.x) + threadIdx.x;
+    unsigned int nThreads = (blockDim.x * gridDim.x);
+    
+    sharedmem[threadIndex] = (globalThreadId < nThreads) ?
+        A[globalThreadId] : 0;
+        
+    
+    // Do the reduction in shared memory
+    for (unsigned int step = blockDim.x >> 1; step > 0; step >>= 1) {
+        __syncthreads();
+        if (threadIndex < step) {
+            int candidate = sharedmem[threadIndex + step];
+            if (sharedmem[threadIndex] < candidate) {
+                sharedmem[threadIndex] = candidate;
+            }
+        }
+    }
+    __syncthreads();
+    
+    // Thread 0 within a block writes the result back to global memory
+    if (threadIndex == 0) {
+        A[blockIdx.x] = sharedmem[0];
+    }
+    __syncthreads();
+    
+    // Now the global data structure has as elements 0-gridDim.x filled with
+    // the results which we need to reduce again. 
+    if (globalThreadId < gridDim.x) {
+        for (unsigned int step = gridDim.x >> 1; step > 0; step >>= 1) {
+            int candidate = A[globalThreadId + step];
+            if (A[globalThreadId] < candidate) {
+                A[globalThreadId] = candidate;
+            }
+        }
+    }
+}
+
+int cudaFindMaxWithSharedMemory(int* A, int length) {
+    int size = length * sizeof(int);
+    int ret;
+    int* cudaArray;
+    cudaMalloc(&cudaArray, size);
+    cudaMemcpy(cudaArray, A, size, cudaMemcpyHostToDevice);
+    
+    dim3 dimBlock(512);
+    dim3 dimGrid(length / 512, 1);
+    
+    findMaxWithSharedMemoryKernel<<<dimGrid, dimBlock>>>(cudaArray);
     
     // Recover just the first element from the device to save time.
     cudaMemcpy(&ret, cudaArray, sizeof(int), cudaMemcpyDeviceToHost);
@@ -110,66 +170,78 @@ int* initializeArray(int length) {
     return A;
 }
 
+void printTiming(timeval start, timeval end, char* desc, int length) {
+    double elapsed =
+        (end.tv_usec - start.tv_usec);
+    printf("%s length %d: %g usec\n", desc, elapsed, length);
+}
+
+void checkAndPrintResult(int expected, int actual, char* desc) {
+    if (expected == actual) {
+        printf("%s passed check ", desc);
+    } else {
+        printf("%s failed check " , desc);
+    }
+    printf("(expected %d, got %d)\n", expected, actual);
+}
+
+void launchTestWithTiming(
+        int testType,
+        int length) {
+            
+    int actual;
+    char* desc;
+    
+    timeval start, end;
+    int* array = initializeArray(length);
+    int expected = array[length - 1];
+    gettimeofday(&start, NULL);
+    switch (testType) {
+        // CPU
+        case 0:
+        desc = "Serial";
+        actual = findMaxOnHost(array, length);
+        break;
+        
+        // Naive Parallel
+        case 1:
+        desc = "Naive Parallel";
+        actual = cudaFindMaxOnDeviceNaively(array, length);
+        break;
+        
+        // Non Divergent Parallel
+        case 2:
+        desc = "Non Divergent Parallel";
+        actual = cudaFindMaxWithoutDivergence(array, length);
+        break;
+        
+        // Shared Memory Parallel
+        case 3:
+        desc = "Shared Memory Parallel";
+        actual = cudaFindMaxWithSharedMemory(array, length);
+        break;
+        
+        default:
+        desc = "Unrecognized!";
+        break;
+        
+    }
+    gettimeofday(&end, NULL);
+    free(array);
+    
+    checkAndPrintResult(expected, actual, desc);
+    printTiming(start, end, desc, length);
+    
+}
+
 
 void runTest(int length) {
-    timeval serialStart, serialEnd;
-    int* serialArr = initializeArray(length);
-    int* naiveParallelArray = initializeArray(length);
-    int* nonDivergentParallelArray = initializeArray(length);
-    
-    gettimeofday(&serialStart, NULL);
-    int expectedSerialMax = serialArr[length - 1];
-    int serialMax = findMaxOnHost(serialArr, length);
-    gettimeofday(&serialEnd, NULL);
-    free(serialArr);
-    
-    int expectedParallelMax = naiveParallelArray[length - 1];
-    int naiveParallelMax =
-        cudaFindMaxOnDeviceNaively(naiveParallelArray, length);
-    free(naiveParallelArray);
-    
-    int expectedNonDivParallelMax = nonDivergentParallelArray[length - 1];
-    int nonDivParallelMax =
-        cudaFindMaxWithoutDivergence(nonDivergentParallelArray, length);
-    free(nonDivergentParallelArray);
-    
-    
-    
-    
-    
-    
-    
-    // Make sure we actually found the max value
-    if (serialMax == expectedSerialMax) {
-        printf("Serial reduction passed check (expected %d, got %d)\n",
-            serialMax, expectedSerialMax);
-    } else {
-        printf("Serial reduction failed! (expected %d, got %d)\n",
-            serialMax, expectedSerialMax);
+    launchTestWithTiming(0, length);
+    launchTestWithTiming(1, length);
+    launchTestWithTiming(1, length);
+    launchTestWithTiming(2, length);
+    launchTestWithTiming(3, length);
     }
-    
-    if (expectedParallelMax == naiveParallelMax) {
-        printf("Naive Parallel reduction passed check (expected %d, got %d)\n",
-            expectedParallelMax, naiveParallelMax);
-    } else {
-        printf("Naive Parallel reduction failed! (expected %d, got %d)\n",
-            expectedParallelMax, naiveParallelMax);
-    }
-    
-    if (expectedNonDivParallelMax == nonDivParallelMax) {
-        printf("Non Divergent Parallel reduction passed check (expected %d, got %d)\n",
-            expectedNonDivParallelMax, nonDivParallelMax);
-    } else {
-        printf("Non Divergent Parallel reduction failed! (expected %d, got %d)\n",
-            expectedNonDivParallelMax, nonDivParallelMax);
-    }
-    
-    
-    
-    double serialElapsedTime =
-        (serialEnd.tv_sec - serialStart.tv_sec) * 1000.0;
-    printf("Serial time: %g\n", serialElapsedTime); 
-}
 
 int main(void) {
     runTest(1024);
