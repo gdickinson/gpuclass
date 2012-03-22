@@ -4,7 +4,11 @@
 #include <sys/time.h>
 
 /*
-TODO: Head Comment
+reduction.cu
+A demonstration of array reduction using CUDA
+
+Created for GPU Architecture and Programming
+Spring 2012, New York University
 
 Copyright 2012 Guy Dickinson <guy.dickinson@nyu.edu>
 */
@@ -151,7 +155,8 @@ int cudaFindMaxWithSharedMemory(int* A, int length) {
 
 
 
-
+// Returns a pointer to an array of ints of size length.
+// For verification purposes, the biggest int will be at the end.
 int* initializeArray(int length) {
     // Set up an array of ints of the right length
     void *ptr;
@@ -185,6 +190,7 @@ void checkAndPrintResult(int expected, int actual, char* desc) {
     printf("(expected %d, got %d)\n", expected, actual);
 }
 
+// Wrapper function for launching each test component.
 void launchTestWithTiming(
         int testType,
         int length) {
@@ -239,6 +245,7 @@ void runTest(int length) {
     launchTestWithTiming(0, length);
     launchTestWithTiming(1, length);
     launchTestWithTiming(1, length);
+    
     launchTestWithTiming(2, length);
     launchTestWithTiming(3, length);
     }
