@@ -15,35 +15,10 @@ William Ward <wwward@nyu.edu>
    limitations under the License.
 */
 
+#include "rc4_common.h"
 #include "rc4_serial.h"
-#include <sys/types.h>
 
-void swap_bytes(u_char *a, u_char *b) {
-    u_char temp;
-    temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
-void rc4_initialize(rc4_state_t* state, const u_char* key, int keylength) {
-    int i;
-    u_char j;
-    
-    for (i = 0; i<256; i++) {
-        state->permutation[i] = i;
-    }
-    state->i = 0;
-    state->j = 0;
-    
-    for (i = j = 0; i<256; i++) {
-        j+= state->permutation[i] + key[ i % keylength];
-        swap_bytes(&state->permutation[i], &state->permutation[j]);
-    }
-}
-
-
-
-void rc4_cipher(rc4_state_t* state, const u_char* inputbuf, u_char* outputbuf, int buflength) {
+void rc4_cipher(rc4_state_t *state, const u_char *inputbuf, u_char *outputbuf, int buflength) {
     int i;
     u_char j;
     

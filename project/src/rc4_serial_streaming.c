@@ -1,4 +1,5 @@
 #include "rc4_serial.h"
+#include "rc4_common.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

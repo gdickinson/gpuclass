@@ -16,29 +16,7 @@ William Ward <wwward@nyu.edu>
 */
 
 #include <sys/types.h>
-
-/**
-* \author Guy Dickinson <guy.dickinson@nyu.edu>
-* The current state of the RC4 cipher machine
-*/
-typedef struct rc4_state {
-    u_char permutation[256];
-    u_char i;
-    u_char j;
-} rc4_state_t;
-
-/**
-* \author Guy Dickinson <guy.dickinson@nyu.edu>
-* Utility function to exchange two arbitrary bytes in memory
-*/
-void swap_bytes(u_char* a, u_char* b);
-
-/**
-* \author Guy Dickinson <guy.dickinson@nyu.edu>
-* Initialize a new RC4 state structure
-*/
-
-void rc4_initialize(rc4_state_t* state, const u_char* key, int keylength);
+#include "rc4_common.h"
 
 /**
 * \author Guy Dickinson <guy.dickinson@nyu.edu>
@@ -46,5 +24,5 @@ void rc4_initialize(rc4_state_t* state, const u_char* key, int keylength);
 * RC4 is symmetric (because it's a stream cipher), so we use the same
 * function for both encryption and decryption.
 */
-void rc4_cipher(rc4_state_t* state, const u_char* inputbuf, u_char* outputbuf, int buflength);
+void rc4_cipher(rc4_state_t *state, const u_char *inputbuf, u_char *outputbuf, int buflength);
 

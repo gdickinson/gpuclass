@@ -1,8 +1,10 @@
 #include "rc4_serial.h"
+#include "rc4_common.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
-int main(char* argv) {
+int main(int arglen, char** argv) {
     
     // Allocate two identical state structs
     rc4_state_t *s1= (rc4_state_t*)malloc(sizeof(rc4_state_t));
@@ -10,13 +12,17 @@ int main(char* argv) {
     
     // Initialize them with the same key. Watch for the string literal
     // null-terminator which we don't bother with
-    rc4_initialize(s1, "Key", 3);
-    rc4_initialize(s2, "Key", 3);
+    
+    u_char* key = (u_char*) "Key";
+    unsigned int len = (unsigned int) strlen((char*) key);
+        
+    rc4_initialize(s1, key, len);
+    rc4_initialize(s2, key, len);
     
     // Allocate a string literal plaintext and two output buffers.
-    const char* inputdata = "Plaintext";
-    char outputdata1[10];
-    char outputdata2[10];
+    const u_char* inputdata = (u_char*) "Plaintext";
+    u_char outputdata1[10];
+    u_char outputdata2[10];
     
     // Encipher...
     rc4_cipher(s1, inputdata, outputdata1, 10);
