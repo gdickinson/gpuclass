@@ -25,6 +25,10 @@ int main (int arglen, char** argv) {
     u_char* data = initialize_constant_data(1024, 'a');
     rc4_state_t *state = (rc4_state_t*)malloc(sizeof(rc4_state_t));
     
+    u_char* initkey = (u_char*) "key";
+    
+    rc4_initialize(state, initkey, 3);
+    
     
     u_char key[1024];
     
@@ -41,7 +45,10 @@ int main (int arglen, char** argv) {
     
     rc4_crypt_kernel<<<2,512>>>(cudaData, cudaKey, 1024);
     
-    printf("Error: %s\n", cudaGetErrorString(cudaGetLastError()));
+    printf("Kernel launch error: %s\n", cudaGetErrorString(cudaGetLastError()));
     
+    cudaMemcpy(data, cudaData, 1024, cudaMemcpyDeviceToHost);
+    data[1023] = '\0';
+    printf("data: %s\n", data);
     
 }
