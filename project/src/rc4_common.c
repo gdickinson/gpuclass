@@ -5,7 +5,8 @@
 
 u_char* initialize_constant_data(int length, u_char c) {
     u_char* data = (u_char*) malloc(sizeof(u_char) * length);
-    for (int i = 0; i < length; i++) {
+    int i;
+    for (i = 0; i < length; i++) {
         data[i] = c;
     }
     return data;

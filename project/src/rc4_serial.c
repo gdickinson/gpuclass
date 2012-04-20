@@ -24,9 +24,13 @@ void rc4_cipher(rc4_state_t *state, const u_char *inputbuf, u_char *outputbuf, i
     
     for (i = 0; i < buflength; i++) {
         state->i++;
-        state->j++;
+        state->j += state->permutation[state->i];
         
-        swap_bytes(&state->permutation[state->i], &state->permutation[j]);
+        swap_bytes(&state->permutation[state->i],
+            &state->permutation[state->j]);
+        
+        j = state->permutation[state->i] + state->permutation[state->j];
+        
         outputbuf[i] = inputbuf[i] ^ state->permutation[j];
     }
 }
