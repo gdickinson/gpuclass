@@ -14,6 +14,9 @@ William Ward <wwward@nyu.edu>
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+#include "rc4_parallel.cuh"
+#include "rc4_common.h"
+#include <cuda.h>
 
 __global__ void rc4_crypt_kernel(u_char* data, u_char* key, int length) {
     

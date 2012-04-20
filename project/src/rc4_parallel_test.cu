@@ -16,6 +16,7 @@ William Ward <wwward@nyu.edu>
 */
 
 #include "rc4_common.h"
+#include "rc4_parallel.cuh"
 #include <cuda.h>
 
 
