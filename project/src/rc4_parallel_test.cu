@@ -18,6 +18,7 @@ William Ward <wwward@nyu.edu>
 #include "rc4_common.h"
 #include "rc4_parallel.cuh"
 #include <cuda.h>
+#include <stdio.h>
 
 
 int main (int arglen, char** argv) {
@@ -39,6 +40,8 @@ int main (int arglen, char** argv) {
     cudaMemcpy(cudaKey, key, 1024, cudaMemcpyHostToDevice);
     
     rc4_crypt_kernel<<<2,512>>>(cudaData, cudaKey, 1024);
+    
+    printf("Error: %s\n", cudaGetErrorString(cudaGetLastError()));
     
     
 }
