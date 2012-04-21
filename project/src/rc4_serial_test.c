@@ -44,7 +44,7 @@ int main(int arglen, char** argv) {
 
     //Timing
     double time = (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000000.0;
-    printf("Time to execute: %3.1f ms\n", time);
+    printf("Time to execute: %f ms\n", time);
     
     return 0;
 }
