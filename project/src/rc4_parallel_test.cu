@@ -22,6 +22,13 @@ William Ward <wwward@nyu.edu>
 
 
 int main (int arglen, char** argv) {
+
+    //Timing - wwward
+    cudaEvent_t start, stop;
+    float time;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
     u_char* data = initialize_constant_data(1024, 'a');
     rc4_state_t *state = (rc4_state_t*)malloc(sizeof(rc4_state_t));
     
@@ -43,12 +50,21 @@ int main (int arglen, char** argv) {
     cudaMalloc(&cudaKey, 1024);
     cudaMemcpy(cudaKey, key, 1024, cudaMemcpyHostToDevice);
     
+	//Timing
+    cudaEventRecord(start,0);
     rc4_crypt_kernel<<<2,512>>>(cudaData, cudaKey, 1024);
-    
+	//Timing
+    cudaEventRecord(stop,0);
+	cudaEventSynchronize(stop);
+
     printf("Kernel launch error: %s\n", cudaGetErrorString(cudaGetLastError()));
     
     cudaMemcpy(data, cudaData, 1024, cudaMemcpyDeviceToHost);
     data[1023] = '\0';
     printf("data: %s\n", data);
+	
+	//Timing
+	cudaEventElapsedTime(&time,start,stop);
+	printf("Time for kernel: %f ms\n",time);
     
 }
