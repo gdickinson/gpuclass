@@ -3,8 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 int main(int arglen, char** argv) {
+    //Timing -www
+    struct timeval t1, t2;
     
     // Allocate two identical state structs
     rc4_state_t *s1= (rc4_state_t*)malloc(sizeof(rc4_state_t));
@@ -24,14 +27,24 @@ int main(int arglen, char** argv) {
     u_char outputdata1[10];
     u_char outputdata2[10];
     
+    //Timing
+    gettimeofday(&t1, 0);
+
     // Encipher...
     rc4_cipher(s1, inputdata, outputdata1, 10);
     
     // ...Decypher
     rc4_cipher(s2, outputdata1, outputdata2, 10);
     
+    //Timing
+    gettimeofday(&t2, 0);
+    
     // Print the output which should be 'Plaintext'
     printf("%s\n", outputdata2);
+
+    //Timing
+    double time = (1000000.0 * (t2.tv_sec - t1.tv_sec) + t2.tv_usec - t1.tv_usec) / 1000000.0;
+    printf("Time to execute: %3.1f ms\n", time);
     
     return 0;
 }
