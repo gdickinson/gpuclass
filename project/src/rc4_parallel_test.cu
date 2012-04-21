@@ -39,16 +39,26 @@ int main (int arglen, char** argv) {
     u_char* cudaKey;
     
     cudaMalloc(&cudaData, 1024);
-    cudaMemcpy(cudaData, data, 1024, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(cudaData, data, 1024, cudaMemcpyHostToDevice);
     cudaMalloc(&cudaKey, 1024);
-    cudaMemcpy(cudaKey, key, 1024, cudaMemcpyHostToDevice);
+    cudaMemcpyAsync(cudaKey, key, 1024, cudaMemcpyHostToDevice);
     
     rc4_crypt_kernel<<<2,512>>>(cudaData, cudaKey, 1024);
     
-    printf("Kernel launch error: %s\n", cudaGetErrorString(cudaGetLastError()));
+    printf("Kernel launch error: %s\n", 
+        cudaGetErrorString(cudaGetLastError()));
     
     cudaMemcpy(data, cudaData, 1024, cudaMemcpyDeviceToHost);
+    
     data[1023] = '\0';
     printf("data: %s\n", data);
+    
+    rc4_crypt_kernel<<<2,512>>>(cudaData, cudaKey, 1024);
+    
+    cudaMemcpy(data, cudaData, 1024, cudaMemcpyDeviceToHost);
+    
+    data[1023] = '\0';
+    printf("data: %s\n", data);
+    
     
 }
