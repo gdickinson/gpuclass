@@ -14,30 +14,43 @@ void print_buffer_in_hex(u_char* buf, int size) {
 }
 
 void encrypt_chunk(u_char* host_databuf, u_char* host_keybuf, 
-	u_char* cuda_databuf, u_char* cuda_keybuf, int length) {	
+	u_char* cuda_databuf, u_char* cuda_keybuf, int length) {		
 
-	u_char* outbuf = (u_char*) malloc(sizeof(u_char) * length);	
-	print_buffer_in_hex(host_databuf, length);
-
-	cudaMemcpyAsync(cuda_databuf, host_databuf, length, cudaMemcpyHostToDevice);
-	cudaMemcpyAsync(cuda_keybuf, host_keybuf, length, cudaMemcpyHostToDevice);
-	int blocks = (length / 512);
-	int threads = 512;
+	cudaMemcpy(cuda_databuf, host_databuf, length, cudaMemcpyHostToDevice);
+	cudaMemcpy(cuda_keybuf, host_keybuf, length, cudaMemcpyHostToDevice);
+	
+	int threads = 256;
+	int blocks = (length / 256);
+	if (blocks == 0) {
+		blocks = 1;
+	}
+	
+	
 	rc4_crypt_kernel<<<blocks, threads>>>(cuda_databuf, cuda_keybuf, length);
+	
+	fprintf(stderr, "Kernel launch error? %s\n", cudaGetErrorString(cudaGetLastError()));
+	
+	if (host_databuf[length] != '\0') {
+		fprintf(stderr, "host_databuf isn't null terminated\n");
+	}
+	
 	// Recover encrypted material
 	cudaMemcpy(host_databuf, cuda_databuf, length, cudaMemcpyDeviceToHost);
-	print_buffer_in_hex(host_databuf, length);
-
+	fwrite(host_databuf, sizeof(u_char), length, stdout);
+	
 }
 
 
 void encrypt_stdin_buffered_parallel(int bufsize, rc4_state* s) {
 	
-	u_char* buffer = (u_char*) malloc(sizeof(u_char) * bufsize);
+	u_char* buffer = (u_char*) malloc(sizeof(u_char) * (bufsize) );
+	
+	// Null-terminate the buffer for printing; we never write to the null-byte
+	
 	u_char* keybuffer = (u_char*) malloc(sizeof(u_char) * bufsize);
 	u_char* cuda_keybuffer;
 	u_char* cuda_databuffer;
-	u_char* output = (u_char*) malloc(sizeof(u_char) * bufsize);
+	// u_char* output = (u_char*) malloc(sizeof(u_char) * bufsize);
 		
 	cudaMalloc(&cuda_keybuffer, bufsize);
 	cudaMalloc(&cuda_databuffer, bufsize);
@@ -53,13 +66,13 @@ void encrypt_stdin_buffered_parallel(int bufsize, rc4_state* s) {
 		}
 		
 		
-		
 		get_n_bytes_of_key(s, keybuffer, i);
+		
 		encrypt_chunk(buffer, keybuffer, cuda_databuffer, cuda_keybuffer, i);	
 		
 		i = 0;
 	}
-	printf("Reached EOF\n");
+	//printf("Reached EOF\n");
 	free(buffer);
 	free(keybuffer);
 }
@@ -71,12 +84,16 @@ rc4_state_t* setup_state_with_key(u_char* key, int keylen) {
 	
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
 	if (argc == 1) {
 		printf("Must specify key as arg 1\n");
 		exit(255);
 	}
-	int keylen = strlen(argv[1])-1;
+	//printf("Key is %s\n", argv[1]);
+	
+	int keylen = strlen(argv[1]);
+	//printf("Keylen is %d\n", keylen);
+	
 	u_char* key = (u_char*) malloc(keylen);
 	memcpy(key, argv[1], keylen);
 	rc4_state_t* state = setup_state_with_key(key, keylen);

@@ -34,6 +34,9 @@ all: parallel_test serial_test serial_test_streaming
 parallel_test: $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ rc4_parallel_test.cu
 
+parallel_test_streaming: $(OBJS)
+	$(CC) -o $@ $(LDFLAGS) $^ rc4_parallel_streaming.cu
+
 serial_test: $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ rc4_serial_test.c
 
