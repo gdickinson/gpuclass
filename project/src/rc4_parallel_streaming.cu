@@ -1,4 +1,3 @@
-#include "rc4_streaming.h"
 #include "rc4_parallel.cuh"
 #include "rc4_common.h"
 #include <stdio.h>
@@ -19,7 +18,6 @@ void encrypt_stdin_buffered_parallel(int bufsize, rc4_state* s) {
 			printf ("Got %d bytes, buffer now %d bytes long\n", j, i );	
 		}
 		
-		// Launch a kernel here
 		
 		printf("Do work on %d bytes\n", i);
 		i = 0;
@@ -29,16 +27,22 @@ void encrypt_stdin_buffered_parallel(int bufsize, rc4_state* s) {
 }
 
 rc4_state_t* setup_state_with_key(u_char* key, int keylen) {
-	rc_state_t* s = (rc4_state_t*) malloc(sizeof(rc4_state_t));
+	rc4_state_t* s = (rc4_state_t*) malloc(sizeof(rc4_state_t));
 	rc4_initialize(s, key, keylen);
 	return s;
 	
 }
 
-int main(int argc, char* argv) {
-	
-	rc4_state_t* state = setup_state_with_key(argv[1], strlen(argv[1])-1);
-	
-	
+int main(int argc, char* argv[]) {
+	if (argc == 1) {
+		printf("Must specify key as arg 1\n");
+		exit(255);
+	}
+	int keylen = strlen(argv[1])-1;
+	u_char* key = (u_char*) malloc(keylen);
+	memcpy(key, argv[1], keylen);
+	printf("Key is %s\n" , key);
+	rc4_state_t* state = setup_state_with_key(key, keylen);
+	encrypt_stdin_buffered_parallel(256, state);	
 }
 
