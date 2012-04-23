@@ -21,18 +21,25 @@ CC		= nvcc
 CFLAGS		= \
 	-Xcompiler '-Wall -Wextra' \
 	-I../include \
+	-g -G
 
 LDFLAGS		= $(CFLAGS)
 
 OBJS 		= \
 	rc4_parallel.o \
 	rc4_common.o \
-	rc4_serial.o
+	rc4_serial.o \
 
-all: parallel_test serial_test serial_test_streaming
+all: parallel_test serial_test serial_test_streaming parallel_test_streaming_interleaved parallel_test_streaming
 
 parallel_test: $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ rc4_parallel_test.cu
+
+parallel_test_streaming: $(OBJS)
+	$(CC) -o $@ $(LDFLAGS) $^ rc4_parallel_streaming.cu
+
+parallel_test_streaming_interleaved: $(OBJS)
+	$(CC) -o $@ $(LDFLAGS) $^ rc4_parallel_streaming_interleaved.cu
 
 serial_test: $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ rc4_serial_test.c
@@ -47,5 +54,10 @@ serial_test_streaming: $(OBJS)
 
 clean:
 	rm -f *.o .*.d
+	rm parallel_test
+	rm parallel_test_streaming
+	rm parallel_test_streaming_interleaved
+	rm serial_test
+	rm serial_test_streaming
 
 -include .*.d
