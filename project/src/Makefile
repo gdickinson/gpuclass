@@ -30,7 +30,7 @@ OBJS 		= \
 	rc4_common.o \
 	rc4_serial.o \
 
-all: parallel_test serial_test serial_test_streaming parallel_test_streaming_interleaved
+all: parallel_test serial_test serial_test_streaming parallel_test_streaming_interleaved parallel_test_streaming
 
 parallel_test: $(OBJS)
 	$(CC) -o $@ $(LDFLAGS) $^ rc4_parallel_test.cu
@@ -54,5 +54,10 @@ serial_test_streaming: $(OBJS)
 
 clean:
 	rm -f *.o .*.d
+	rm parallel_test
+	rm parallel_test_streaming
+	rm parallel_test_streaming_interleaved
+	rm serial_test
+	rm serial_test_streaming
 
 -include .*.d
