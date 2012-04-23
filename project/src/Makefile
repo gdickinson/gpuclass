@@ -21,6 +21,7 @@ CC		= nvcc
 CFLAGS		= \
 	-Xcompiler '-Wall -Wextra' \
 	-I../include \
+	-g -G
 
 LDFLAGS		= $(CFLAGS)
 
