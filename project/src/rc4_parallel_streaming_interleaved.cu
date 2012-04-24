@@ -228,13 +228,19 @@ int main(int argc, char *argv[]) {
 		printf("Must specify key as arg 1\n");
 		exit(255);
 	}
+
+    int buffersz = 512; //size shipped to gpu
+
+    if (argc == 3) {
+        buffersz = atoi(argv[2]);
+    }
 	
 	int keylen = strlen(argv[1]);
 	
 	u_char* key = (u_char*) malloc(keylen);
 	memcpy(key, argv[1], keylen);
 	rc4_state_t* state = setup_state_with_key(key, keylen);
-	encrypt_stdin_buffered_parallel(512, state);
+	encrypt_stdin_buffered_parallel(buffersz, state);
 	free(state);	
 }
 

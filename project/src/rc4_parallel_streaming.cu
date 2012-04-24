@@ -94,9 +94,15 @@ int main(int argc, char *argv[]) {
 	int keylen = strlen(argv[1]);
 	//printf("Keylen is %d\n", keylen);
 	
+    int buffersz = 512; //size shipped to gpu
+
+    if (argc == 3) {
+        buffersz = atoi(argv[2]);
+    }
+
 	u_char* key = (u_char*) malloc(keylen);
 	memcpy(key, argv[1], keylen);
 	rc4_state_t* state = setup_state_with_key(key, keylen);
-	encrypt_stdin_buffered_parallel(512, state);	
+	encrypt_stdin_buffered_parallel(buffersz, state);	
 }
 
