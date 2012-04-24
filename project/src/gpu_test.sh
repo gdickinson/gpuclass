@@ -1,7 +1,7 @@
 #!/bin/bash
 rm -rf serial.txt
-rm -rf parallel_noninterleaved.txt
-rm -rf parallel_interleaved.txt
+rm -rf parallel_noninterleaved*.txt
+rm -rf parallel_interleaved*.txt
 COUNTERMAIN=10
 
 echo "baseline test"
