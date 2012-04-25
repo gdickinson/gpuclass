@@ -1,49 +1,68 @@
-\documentclass{article}
+\documentclass[twocolumn]{article}
 \usepackage{fullpage}
 \usepackage{mathpazo}
 \usepackage{hyperref}
+\usepackage{cite}
 
 \begin{document}
   
-  \title{GPU Project Report 2: Accelerated RC4 Stream Cipher Detailed Design}
+  \title{GPU Project Final Report: Accelerated RC4 Stream Cipher}
   \author{Guy Dickinson (guy.dickinson@nyu.edu) \& William Ward, (wwward@nyu.edu)}
   \maketitle
   
-  \section{Previous Work: Survey}
+  \section{Introduction}
+  The RC4\footnote{RC4 remains a trademark of RSA; RC4 is alternately known as ARCFOUR but referred to here as RC4 for clarity.} cipher is a widely used stream cipher found in many common applications, from WEP/TKIP \cite[p. 171]{cisco-netsec} to OpenSSL \cite{openssl}. It is a stream cipher with a particularly simple encipher/decipher operation; the actual mutation of plaintext to ciphertext is a simple bitwise XOR operation against a keystream generated from a relatively straightforward state machine initialized with a secret key of arbitrary length.
   
-  \section{Previous Work: Shortcomings}
-   Previous work in this area has focused on encrypting and decrypting static data in fixed files, in particular in PDFs \footnote{\url{http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=5276924&tag=1}}. We propose to examine encrypting and decrypting data of arbitrary length, such as one might find in a network rather than a filesystem environment. Such an environment precludes generating the entire necessary keystream start time and instead requires a mechanism to generate it on-the-fly, move it efficiently to the GPU along with the target text, and recovering the results. Keeping sufficient keying material on hand at all times is a particular challenge. Fortunately, unlike many block ciphers which depend on previous ciphertext output to generate more keying material (a process known as cipher block chaining), the keystream is generated completely independently of either plaintext or ciphertext.
-   
-   Additionally, it may be possible to generate the keystream on-device rather than on the CPU (even though it is a fundamentally serial operation) -- this would substantially reduce the amount of memory traffic between host and device.
-   
-
-  \section{Data Structure}
+  The specification for RC4 has never officially been released by its corporate owner, RSA, although its creator, Ron Rivest, has tacitly acknowledged veracity of the public implementations of RSA by linking to the Wikipedia page for RC4 in his course notes at MIT.\cite{rivest-notes}
   
-  \begin{enumerate}
-    \item A simple array of bytes will store the keystream, plaintext, and ciphertext.  The size of the array will be determined by the amount of material that must be buffered from the input source, and the resulting processed output.  The depth of this buffer and performance ratio may vary depending on the achievable stream rate, and the overhead cost of moving the buffer in and out of the device.
-    \item A 256 byte array, called ``S," which is permuted to generate the keystream.
-    \item Two index pointers, ``i" and ``j," which are used by the PRGA to facilitate swapping elements within array ``S".
-  \end{enumerate}
-
-  A more complete discussion of the data structures involved may be found via any public source detailing RC4, including Wikipedia.
+  Previous work in this area \cite{5276924} was largely been limited to a proof-of-concept implementation which encrypted and decrypted static files on-disk. This gave the authors the luxury of knowing exactly how much data is to be encrypted before the program is run. Such is not the life a stream cipher in the field; a stream cipher must be able to take arbitrary amounts of data at any given moment and efficiently process it. Our implementation efficiently streams data to and from the GPU making use of CUDA's multi-stream instruction architecture. 
   
-  \section{Main Functions: CPU}
+  \section{Design}
   
-  \begin{enumerate}
-    \item Key-scheduling algorithm - this function initializes the array with the encryption key and is used by the PRGA to produce the keystream.
-    \item Pseudo-random generation algorithm - this function produces the keystream in a sequential manner from the array derived by the key scheduler.
-    \item Buffer sizing and external I/O - functions required to determine array size, transfer frequency, and input-output.
-  \end{enumerate}
-
-
-  \section{Main Functions: Device}
- Data enciphering - this function takes plaintext or ciphertext and XORs its contents with the keystream, this operation is suitable for parallel execution.
-
+  Our RC4 implementation has two major operations and three major components. The components are:
+  
+  \begin{itemize}
+    \item An array, $A_t$ of arbitrary length $l$ containing the target data to be encrypted or decrypted.
+    \item A second array $A_k$, also of length $l$, containing the keystream with which the data is to be encrypted.
+    \item A data structure $M$ which represents the current state of the keystream generator. That data structure contains:
+    \begin{itemize}
+      \item A an array of all 256 possible bytes (that is to say, all possible 8-bit binary combinations, $2^8=256$ in total).
+      \item Two pointers
+    \end{itemize}
+  \end{itemize}
+  
+  The operations are:
+  
+  \begin{itemize}
+    \item Initialization of the RC4 state.
+    \item Encryption/decryption of data.
+  \end{itemize}
+  
+  Initialization is performed only once per run of the RC4 algorithm and takes negligible time. Encryption/decryption is performed with the simple operation $A_k \oplus A_t$
+  
+  RC4 presents an interesting challenge from a parallelization perspective: although the actual bit-flipping operation can be parallelized very easily, generating the keystream is an inherently parallel operation. That is to say, the operation of calculating byte $n$ of the keystream explicitly requires byte $n-1$ to perform.
+  
+  Because generating the keystream is so inherently parallel, trying to contort the GPU into performing this task made no sense; the key-scheduler and its operation remains on the CPU. All encryption and decryption is done on the GPU.
+    
+  \subsection{Partitioning}
+  
+  \subsection{GPU Grid Geometry}
+  
   \section{Optimizations}
-  \begin{enumerate}
-    \item Keystream generation - finding methods to benefit from parallelization or reasonably fast keystream generation on-device.
-    \item Efficient memory transfers - reducing the overhead of shipping data between CPU and device by coalescing transfers
-  \end{enumerate}
+  \subsection{Buffering}
+  
+  \subsection{Asynchronous GPU Transfer}
+  
+  \section{Experimental Setup}
+  
+  \section{Results}
+  
+  \section{Conclusions}
+  
+  \bibliography{final}{}
+  \bibliographystyle{plain}
+  
+  
 
   
 \end{document}
