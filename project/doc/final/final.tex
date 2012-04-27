@@ -3,6 +3,8 @@
 \usepackage{mathpazo}
 \usepackage{hyperref}
 \usepackage{cite}
+\usepackage{graphicx}
+\usepackage{verbatim}
 
 \begin{document}
   
@@ -83,15 +85,28 @@
   
   \section{Results}
   
-  \section{Conclusions}
+  \begin{comment}
+  \begin{table}
+  \begin{tabular}{| c | c | c | c | c | c |}
+. & SerialCPU & Par512 & ParInt512 & Par16.7M & ParInt16.7M \\ \hline
+SerialCPU & 100.00\% & 217.73\% & 275.18\% & 71.11\% & 69.51\% \\ \hline
+Par512 & 45.93\% & 100.00\% & 126.39\% & 32.66\% & 31.93\% \\ \hline
+ParInt512 & 36.34\% & 79.12\% & 100.00\% & 25.84\% & 25.26\% \\ \hline
+Par16.7M & 140.62\% & 306.17\% & 386.96\% & 100.00\% & 97.75\% \\ \hline
+ParInt16.7M & 143.86\% & 313.23\% & 395.87\% & 102.30\% & 100.00\% \\ \hline
+  \end{tabular}
+  \end{table}
+  \end{comment}
   
+  %\includegraphics{runtimes.png}
+
+  \section{Conclusions}
+   todo: what is the limiting factor of the 16.7M buffersize?
+
   \section{Additional Notes}
   All experimental code may be found at \url{https://github.com/gdickinson/gpuclass}.
   
   \bibliography{final}{}
   \bibliographystyle{plain}
-  
-  
-
   
 \end{document}
