@@ -105,10 +105,10 @@
   \caption{Interleaved Performance}
   \end{table} 
   
-  \includegraphics[scale=0.25]{gpuruntimes.eps} 
+  \includegraphics[scale=0.40]{gpuruntimes.eps} 
 
   \section{Conclusions}
-   todo: what is the limiting factor of the 16.7M buffersize?
+   The best case performance in our test series yields a 30\% increase in performance over the serial implementation.  While there are a multitude of unexplored optimizations, such as improving the key generation mechanism with a buffer, the observed increase validates our assumption that despite the transfer overhead between CPU and GPU, there is compelling improvement in the overall runtime to warrant further refinement of the implementation.  As GPU technology develops towards heterogenous systems where CPU and GPU are no longer separated by high-latency buses, the performance gap between our serial implementation and our GPU implementation is expected to significantly increase.
 
   \section{Additional Notes}
   All experimental code may be found at \url{https://github.com/gdickinson/gpuclass}.
