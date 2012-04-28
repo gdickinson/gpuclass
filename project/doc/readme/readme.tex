@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{fullpage}
+\usepackage{mathpazo}
+\usepackage{inconsolata}
+\usepackage{hyperref}
+
+
+\begin{document}
+  
+  \title{Instructions For Compiling and Running RC4 Test Applications}
+  \author{Guy Dickinson (guy.dickinson@nyu.edu) \& William Ward, (wwward@nyu.edu) \\ New York University, Department of Computer Science}
+  \maketitle
+  
+  \section{Getting the Code}
+  You probably already have a copy of the source code, submitted via email. If you don't you can download the latest revision from \url{https://github.com/gdickinson/gpuclass/tarball/master}.
+  
+  \section{Compiling}
+  There's a Makefile which should do most of the tedious work for you. There is, however no \texttt{configure} script, so please ensure you are running this on a system with the appropriate CUDA drivers installed and already in your \texttt{LD\_LIBRARY} path or equivalent. The \texttt{cuda*} systems are perfect for this application. We recommend starting there.
+  
+  Unpack the tarball and switch into the \texttt{project/src} directory. A simple \texttt{make} should suffice. If you need it, \texttt{make clean} will clean up everything. There's no \texttt{make install}, but everything will run just fine out of the \texttt{src/} directory.
+  
+  \section{Running}
+  After compilation, you will find the following binaries:
+  
+  \begin{itemize}
+    \item \texttt{parallel\_test}: An unbuffered, non-streaming parallel implementation of RC4. We did not use this in our final results.
+    \item \texttt{parallel\_test\_streaming}: A buffered, non-interleaved version of RC4.
+    \item \texttt{parallel\_test\_streaming\_interleaved}: A buffered, multi-stream version of RC4, by far the best implementation we tried.
+    \item \texttt{serial\_test}: An unbuffered, non-streaming simple RC4 program. The first thing we wrote. We did not include results from this in our report.
+    \item \texttt{serial\_test\_streaming}: A streaming, serial version of RC4.
+  \end{itemize}
+  
+  Each program takes input from standard input, and returns the encrypted result to standard output. Debugging text, where present, is printed to standard error. You will probably need to redirect input/output to and from files.
+  All programs take a key as the first argument and, where applicable, a buffer size as the second argument. For example:
+  
+  \texttt{\$ ./parallel\_test\_streaming\_interleaved supersecretkey 1024 < inputfile > outputfile}
+  
+  You can verify the results by reversing the arguments and making sure you get the same input back again.
+  
+\end{document}
