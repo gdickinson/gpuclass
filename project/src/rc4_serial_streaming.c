@@ -26,7 +26,7 @@ void encrypt_stdio(char* key) {
 int main(int argc, char* argv[]) {
     char* key;
     
-    if (argc != 2) {
+    if (argc < 2) {
         // Must supply a key
         fprintf(stderr, "Must supply key argument\n");
         exit(-1);
