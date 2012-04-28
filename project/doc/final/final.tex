@@ -85,19 +85,25 @@
   
   \section{Results}
   
-  %\begin{comment}
   \begin{table}
-  \tiny
-  \begin{tabular}{| c | c | c | c | c | c |}
-. & SerialCPU & Par512 & ParInt512 & Par16.7M & ParInt16.7M \\ \hline
-SerialCPU & 100.00\% & 217.73\% & 275.18\% & 71.11\% & 69.51\% \\ \hline
-Par512 & 45.93\% & 100.00\% & 126.39\% & 32.66\% & 31.93\% \\ \hline
-ParInt512 & 36.34\% & 79.12\% & 100.00\% & 25.84\% & 25.26\% \\ \hline
-Par16.7M & 140.62\% & 306.17\% & 386.96\% & 100.00\% & 97.75\% \\ \hline
-ParInt16.7M & 143.86\% & 313.23\% & 395.87\% & 102.30\% & 100.00\% \\ \hline
+  \centering
+  \begin{tabular}{ c | c | c | c }
+   & Serial & Par 512 & Par 16.7M \\ \hline
+  Time & 8.613s & 18.753s & 6.125s \\ 
+  \% change & - & +117.73\% & -28.89\% \\
   \end{tabular}
-  \end{table}
-  %\end{comment}
+  \caption{Non-Interleaved Performance}
+  \end{table} 
+  
+  \begin{table}
+  \centering
+  \begin{tabular}{ c | c | c | c }
+   & Serial & Par 512 & Par 16.7M \\ \hline
+  Time & 8.613s & 23.701s & 5.987s \\ 
+  \% change & - & +175.18\% & -30.49\% \\
+  \end{tabular}
+  \caption{Interleaved Performance}
+  \end{table} 
   
   \includegraphics[scale=0.25]{gpuruntimes.eps} 
 
